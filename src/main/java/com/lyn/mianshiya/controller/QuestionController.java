@@ -1,6 +1,8 @@
 package com.lyn.mianshiya.controller;
 
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.lyn.mianshiya.annotation.AuthCheck;
 import com.lyn.mianshiya.common.BaseResponse;
@@ -10,13 +12,12 @@ import com.lyn.mianshiya.common.ResultUtils;
 import com.lyn.mianshiya.constant.UserConstant;
 import com.lyn.mianshiya.exception.BusinessException;
 import com.lyn.mianshiya.exception.ThrowUtils;
-import com.lyn.mianshiya.model.dto.question.QuestionAddRequest;
-import com.lyn.mianshiya.model.dto.question.QuestionEditRequest;
-import com.lyn.mianshiya.model.dto.question.QuestionQueryRequest;
-import com.lyn.mianshiya.model.dto.question.QuestionUpdateRequest;
+import com.lyn.mianshiya.model.dto.question.*;
 import com.lyn.mianshiya.model.entity.Question;
+import com.lyn.mianshiya.model.entity.QuestionBankQuestion;
 import com.lyn.mianshiya.model.entity.User;
 import com.lyn.mianshiya.model.vo.QuestionVO;
+import com.lyn.mianshiya.service.QuestionBankQuestionService;
 import com.lyn.mianshiya.service.QuestionService;
 import com.lyn.mianshiya.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +43,9 @@ public class QuestionController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private QuestionBankQuestionService questionBankQuestionService;
 
     // region 增删改查
 
@@ -98,8 +102,15 @@ public class QuestionController {
         if (!oldQuestion.getUserId().equals(user.getId()) && !userService.isAdmin(request)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
-        // 操作数据库
-        boolean result = questionService.removeById(id);
+        // 操作数据库 删除题目题库关联记录和题目
+        boolean result;
+        LambdaQueryWrapper<QuestionBankQuestion> lambdaQueryWrapper = Wrappers.lambdaQuery(QuestionBankQuestion.class)
+                .eq(QuestionBankQuestion::getQuestionId, id);
+        result = questionBankQuestionService.remove(lambdaQueryWrapper);
+        if (!result) {
+            throw new BusinessException(ErrorCode.OPERATION_ERROR, "删除题目题库关联失败");
+        }
+        result = questionService.removeById(id);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         return ResultUtils.success(true);
     }
@@ -251,6 +262,12 @@ public class QuestionController {
 
     // endregion
 
+    /**
+     * es分词搜索
+     * @param questionQueryRequest
+     * @param request
+     * @return
+     */
     @PostMapping("/search/page/vo")
     public BaseResponse<Page<QuestionVO>> searchQuestionVOByPage(@RequestBody QuestionQueryRequest questionQueryRequest,
                                                                  HttpServletRequest request) {
@@ -259,5 +276,20 @@ public class QuestionController {
         ThrowUtils.throwIf(size > 200, ErrorCode.PARAMS_ERROR);
         Page<Question> questionPage = questionService.searchFromEs(questionQueryRequest);
         return ResultUtils.success(questionService.getQuestionVOPage(questionPage, request));
+    }
+
+    /**
+     * 批量删除
+     * @param questionBatchDeleteRequest
+     * @param request
+     * @return
+     */
+    @PostMapping("/delete/batch")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
+    public BaseResponse<Boolean> batchDeleteQuestions(@RequestBody QuestionBatchDeleteRequest questionBatchDeleteRequest,
+                                                      HttpServletRequest request) {
+        ThrowUtils.throwIf(questionBatchDeleteRequest == null, ErrorCode.PARAMS_ERROR);
+        questionService.batchDeleteQuestions(questionBatchDeleteRequest.getQuestionIdList());
+        return ResultUtils.success(true);
     }
 }
