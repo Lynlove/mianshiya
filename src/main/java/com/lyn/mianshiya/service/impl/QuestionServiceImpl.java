@@ -250,6 +250,9 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
         List<String> tags = questionQueryRequest.getTags();
         Long questionBankId = questionQueryRequest.getQuestionBankId();
         Long userId = questionQueryRequest.getUserId();
+
+        String title = questionQueryRequest.getTitle();
+
         // 注意，ES的起始页为0
         int current = questionQueryRequest.getCurrent() - 1;
         int pageSize = questionQueryRequest.getPageSize();
@@ -277,6 +280,9 @@ public class QuestionServiceImpl extends ServiceImpl<QuestionMapper, Question> i
             for (String tag : tags) {
                 boolQueryBuilder.filter(QueryBuilders.termQuery("tags", tag));
             }
+        }
+        if (StringUtils.isNotBlank(title)){
+            boolQueryBuilder.filter(QueryBuilders.matchQuery("title", title));
         }
         // 按关键词搜索
         if (StringUtils.isNotBlank(searchText)) {
