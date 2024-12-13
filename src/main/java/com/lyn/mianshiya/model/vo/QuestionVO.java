@@ -1,5 +1,6 @@
 package com.lyn.mianshiya.model.vo;
 
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.lyn.mianshiya.model.entity.Question;
 import lombok.Data;
@@ -91,7 +92,11 @@ public class QuestionVO implements Serializable {
         }
         QuestionVO questionVO = new QuestionVO();
         BeanUtils.copyProperties(question, questionVO);
-        questionVO.setTagList(JSONUtil.toList(question.getTags(), String.class));
+//        questionVO.setTagList(JSONUtil.toList(question.getTags(), String.class));
+        String tagsStr = question.getTags();
+        if (StrUtil.isNotBlank(tagsStr)) {
+            questionVO.setTagList(JSONUtil.toList(JSONUtil.parseArray(tagsStr), String.class));
+        }
         return questionVO;
     }
 }
