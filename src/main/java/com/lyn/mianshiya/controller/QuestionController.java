@@ -1,6 +1,7 @@
 package com.lyn.mianshiya.controller;
 
 import cn.dev33.satoken.annotation.SaCheckRole;
+import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.csp.sentinel.Entry;
 import com.alibaba.csp.sentinel.EntryType;
@@ -19,6 +20,7 @@ import com.lyn.mianshiya.common.ResultUtils;
 import com.lyn.mianshiya.constant.UserConstant;
 import com.lyn.mianshiya.exception.BusinessException;
 import com.lyn.mianshiya.exception.ThrowUtils;
+import com.lyn.mianshiya.manager.CounterManager;
 import com.lyn.mianshiya.model.dto.question.*;
 import com.lyn.mianshiya.model.entity.Question;
 import com.lyn.mianshiya.model.entity.QuestionBankQuestion;
@@ -35,6 +37,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 题目接口
@@ -54,6 +57,9 @@ public class QuestionController {
 
     @Resource
     private QuestionBankQuestionService questionBankQuestionService;
+
+    @Resource
+    private CounterManager counterManager;
 
     // region 增删改查
 
@@ -154,6 +160,35 @@ public class QuestionController {
         return ResultUtils.success(true);
     }
 
+    private void crawlerDetect(long loginUserId) {
+        // 调用多少次时告警
+        final int WARN_COUNT = 10;
+        // 调用多少次时封禁
+        final int BAN_COUNT = 20;
+        // 拼接访问key
+        String key = String.format("user:access:%s", loginUserId);
+        // 一分钟内访问次数， 180秒过期
+        long count = counterManager.incrAndGetCounter(key, 1, TimeUnit.MINUTES, 180);
+        // 是否封号
+        if (count > BAN_COUNT) {
+            // 踢下线
+            StpUtil.kickout(loginUserId);
+            // 封号
+            User updateUser = new User();
+            updateUser.setId(loginUserId);
+            updateUser.setUserRole(UserConstant.BAN_ROLE);
+            userService.updateById(updateUser);
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "访问过于频繁，已被封号");
+        }
+        // 是否告警
+        if (count > WARN_COUNT) {
+            // todo 向管理员发送邮件通知
+            log.warn("用户{}访问过于频繁，当前访问次数：{}", loginUserId, count);
+            throw new BusinessException(110, "警告：访问过于频繁");
+        }
+
+    }
+
     /**
      * 根据 id 获取题目（封装类）
      *
@@ -163,6 +198,11 @@ public class QuestionController {
     @GetMapping("/get/vo")
     public BaseResponse<QuestionVO> getQuestionVOById(long id, HttpServletRequest request) {
         ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
+
+        // 检测和处置爬虫
+        User loginUser = userService.getLoginUser(request);
+        crawlerDetect(loginUser.getId());
+
         // 查询数据库
         Question question = questionService.getById(id);
         ThrowUtils.throwIf(question == null, ErrorCode.NOT_FOUND_ERROR);
