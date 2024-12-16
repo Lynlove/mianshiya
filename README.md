@@ -1,176 +1,95 @@
-# SpringBoot 项目初始模板
+## 一、项目介绍
 
-基于 Java SpringBoot 的项目初始模板，整合了常用框架和主流业务的示例代码。
+面试鸭是一款基于 Next.js + Spring Boot + Redis + MySQL + Elasticsearch 的 **面试刷题平台**，运用 Druid + HotKey + Sa-Token + Sentinel 提高了系统的性能和安全性。
 
-[toc]
+管理员可以创建题库、题目和题解；用户可以注册登录、分词检索题目、在线刷题并查看刷题记录日历图。
 
-## 模板特点
+此外，系统使用数据库连接池、热 Key 探测、缓存、高级数据结构等来提升性能。通过流量控制、熔断、动态 IP 黑白名单过滤、同端登录冲突检测、分级反爬虫策略来提升系统和内容的安全性。
 
-### 主流框架 & 特性
+## 二、核心业务流程
 
-- Spring Boot 2.7.x（贼新）
-- Spring MVC
-- MyBatis + MyBatis Plus 数据访问（开启分页）
-- Spring Boot 调试工具和项目处理器
-- Spring AOP 切面编程
-- Spring Scheduler 定时任务
-- Spring 事务注解
+如下图：
 
-### 数据存储
+![img](https://cdn.nlark.com/yuque/0/2024/jpeg/43928227/1733231332450-173512dd-3e4b-41d7-91c0-ea85bf6f439f.jpeg)
 
-- MySQL 数据库
-- Redis 内存数据库
-- Elasticsearch 搜索引擎
-- 腾讯云 COS 对象存储
+## 三、项目功能梳理
 
-### 工具类
+### 基础功能
 
-- Easy Excel 表格处理
-- Hutool 工具库
-- Apache Commons Lang3 工具类
-- Lombok 注解
+- 用户模块
 
-### 业务特性
+- - 用户注册
+  - 用户登录（账号密码）
+  - 【管理员】管理用户 - 增删改查
 
-- 业务代码生成器（支持自动生成 Service、Controller、数据模型代码）
-- Spring Session Redis 分布式登录
-- 全局请求响应拦截器（记录日志）
-- 全局异常处理器
-- 自定义错误码
-- 封装通用响应类
-- Swagger + Knife4j 接口文档
-- 自定义权限注解 + 全局校验
-- 全局跨域处理
-- 长整数丢失精度解决
-- 多环境配置
+- 题库模块
 
+- - 查看题库列表
+  - 查看题库详情（展示题库下的题目）
+  - 【管理员】管理题库 - 增删改查
 
-## 业务功能
+- 题目模块
 
-- 提供示例 SQL（用户、帖子、帖子点赞、帖子收藏表）
-- 用户登录、注册、注销、更新、检索、权限管理
-- 帖子创建、删除、编辑、更新、数据库检索、ES 灵活检索
-- 帖子点赞、取消点赞
-- 帖子收藏、取消收藏、检索已收藏帖子
-- 帖子全量同步 ES、增量同步 ES 定时任务
-- 支持微信开放平台登录
-- 支持微信公众号订阅、收发消息、设置菜单
-- 支持分业务的文件上传
+- - 题目搜索
+  - 查看题目详情（进入刷题页面）
+  - 【管理员】管理题目 - 增删改查（比如按照题库查询题目、修改题目所属题库等）
 
-### 单元测试
+### 高级功能
 
-- JUnit5 单元测试
-- 示例单元测试类
+- 题目批量管理
 
-### 架构设计
+- - 【管理员】批量向题库添加题目
+  - 【管理员】批量从题库移除题目
+  - 【管理员】批量删除题目
 
-- 合理分层
+- 分词题目搜索
 
+- 用户刷题记录日历图
 
-## 快速上手
+- 自动缓存热门题目
 
-> 所有需要修改的地方都标记了 `todo`，便于找到修改的位置~
+- 网站流量控制和熔断
 
-### MySQL 数据库
+- 动态 IP 黑白名单过滤
+- 同端登录冲突检测
+- 分级题目反爬虫策略
 
-1）修改 `application.yml` 的数据库配置为你自己的：
+## 四、技术选型
 
-```yml
-spring:
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/mianshiya
-    username: root
-    password: 123456
-```
+### 前端
 
-2）执行 `sql/create_table.sql` 中的数据库语句，自动创建库表
+- React 18 框架
+- ⭐️ Next.js 服务端渲染
+- ⭐️ Redux 状态管理
+- Ant Design 组件库
+- 富文本编辑器组件
+- ⭐️ 前端工程化：ESLint + Prettier + TypeScript
+- ⭐️ OpenAPI 前端代码生成
 
-3）启动项目，访问 `http://localhost:8101/api/doc.html` 即可打开接口文档，不需要写前端就能在线调试接口了~
+### 后端
 
-![](doc/swagger.png)
+- Java Spring Boot 框架 + Maven 多模块构建
+- MySQL 数据库 + MyBatis-Plus 框架 + MyBatis X
+- Redis 分布式缓存 + Caffeine 本地缓存
+- Redission 分布式锁 + BitMap + BloomFilter
+- ⭐️ Elasticsearch 搜索引擎
+- ⭐️ Druid 数据库连接池 + 并发编程
+- ⭐️ Sa-Token 权限控制
+- ⭐️ HotKey 热点探测
+- ⭐️ Sentinel 流量控制
+- ⭐️ Nacos 配置中心
+- ⭐️ 多角度项目优化：性能、安全性、可用性
 
-### Redis 分布式登录
+## 五、架构设计
 
-1）修改 `application.yml` 的 Redis 配置为你自己的：
+![img](https://cdn.nlark.com/yuque/0/2024/png/43928227/1733231332486-f16fe5d7-082b-4f1b-964d-db60aaafe20b.png?x-oss-process=image%2Fformat%2Cwebp%2Fresize%2Cw_937%2Climit_0)
 
-```yml
-spring:
-  redis:
-    database: 1
-    host: localhost
-    port: 6379
-    timeout: 5000
-    password: 123456
-```
+## 六、网站效果
 
-2）修改 `application.yml` 中的 session 存储方式：
+![image-20241216132122174](https://s2.loli.net/2024/12/16/uOSRQG2rxYjpZa4.png)
 
-```yml
-spring:
-  session:
-    store-type: redis
-```
+![image-20241216132201393](https://s2.loli.net/2024/12/16/vAqP9DpxJCldrNb.png)
 
-3）移除 `MainApplication` 类开头 `@SpringBootApplication` 注解内的 exclude 参数：
+![image-20241216132515777](https://s2.loli.net/2024/12/16/9ySBKJDNFLUiPxc.png)
 
-修改前：
-
-```java
-@SpringBootApplication(exclude = {RedisAutoConfiguration.class})
-```
-
-修改后：
-
-
-```java
-@SpringBootApplication
-```
-
-### Elasticsearch 搜索引擎
-
-1）修改 `application.yml` 的 Elasticsearch 配置为你自己的：
-
-```yml
-spring:
-  elasticsearch:
-    uris: http://localhost:9200
-    username: root
-    password: 123456
-```
-
-2）复制 `sql/post_es_mapping.json` 文件中的内容，通过调用 Elasticsearch 的接口或者 Kibana Dev Tools 来创建索引（相当于数据库建表）
-
-```
-PUT post_v1
-{
- 参数见 sql/post_es_mapping.json 文件
-}
-```
-
-这步不会操作的话需要补充下 Elasticsearch 的知识，或者自行百度一下~
-
-3）开启同步任务，将数据库的帖子同步到 Elasticsearch
-
-找到 job 目录下的 `FullSyncPostToEs` 和 `IncSyncPostToEs` 文件，取消掉 `@Component` 注解的注释，再次执行程序即可触发同步：
-
-```java
-// todo 取消注释开启任务
-//@Component
-```
-
-### 业务代码生成器
-
-支持自动生成 Service、Controller、数据模型代码，配合 MyBatisX 插件，可以快速开发增删改查等实用基础功能。
-
-找到 `generate.CodeGenerator` 类，修改生成参数和生成路径，并且支持注释掉不需要的生成逻辑，然后运行即可。
-
-```
-// 指定生成参数
-String packageName = "com.lyn.mianshiya";
-String dataName = "用户评论";
-String dataKey = "userComment";
-String upperDataKey = "UserComment";
-```
-
-生成代码后，可以移动到实际项目中，并且按照 `// todo` 注释的提示来针对自己的业务需求进行修改。
+![image-20241216155125017](https://s2.loli.net/2024/12/16/vEMHAFhg9suKDnp.png)

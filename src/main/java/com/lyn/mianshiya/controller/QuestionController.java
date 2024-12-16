@@ -200,8 +200,8 @@ public class QuestionController {
         ThrowUtils.throwIf(id <= 0, ErrorCode.PARAMS_ERROR);
 
         // 检测和处置爬虫
-        User loginUser = userService.getLoginUser(request);
-        crawlerDetect(loginUser.getId());
+//        User loginUser = userService.getLoginUser(request);
+//        crawlerDetect(loginUser.getId());
 
         // 查询数据库
         Question question = questionService.getById(id);
